@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/list_view_song"
             android:background="@drawable/top_bg"
-            android:visibility="gone">
+            android:visibility="visible">
 
             </ListView>
 

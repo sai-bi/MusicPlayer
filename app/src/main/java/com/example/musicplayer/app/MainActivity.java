@@ -4,14 +4,16 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -26,47 +28,56 @@ public class MainActivity extends ActionBarActivity {
     private ArrayList<String> song_list;
     private ArrayList<String> url_list;
     private SQLiteDatabase database;
+    private ArrayAdapter<String> song_list_view_adapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final Button add_button = (Button) (findViewById(R.id.btn_add));
-        final Button list_button = (Button)(findViewById(R.id.btn_play_list));
-
+        final Button list_button = (Button) (findViewById(R.id.btn_play_list));
 
 
         song_name = "";
         song_url = "";
         song_list = new ArrayList<String>();
         url_list = new ArrayList<String>();
+
+
+        song_list.add("让她降落");
+        url_list.add("http://i.cs.hku.hk/fyp/2013/fyp13027/music/test.mp3");
+
+
         getSongList();
         setUpListView();
 
 
-
-
-
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
-        builder.setView(inflater.inflate(R.layout.mydialog, null))
+        final View view_add_song = inflater.inflate(R.layout.mydialog, null);
+
+        builder.setView(view_add_song)
                 // Add action buttons
                 .setPositiveButton("Add", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        EditText input_song_name = (EditText) (findViewById(R.id.input_song_name));
-                        EditText input_song_url = (EditText) (findViewById(R.id.input_song_url));
-                        if (input_song_name != null) {
+                        EditText input_song_name = (EditText) (view_add_song.findViewById(R.id.input_song_name));
+                        EditText input_song_url = (EditText) (view_add_song.findViewById(R.id.input_song_url));
+                        if (input_song_name.getText() != null) {
                             song_name = input_song_name.getText().toString();
                         } else {
                             return;
                         }
-                        if (input_song_url != null) {
+                        if (input_song_url.getText() != null) {
                             song_url = input_song_url.getText().toString();
                         } else {
                             return;
                         }
-                        database.execSQL("insert into SONG_LIST values(null,?,?)", new Object[]{song_name,song_url});
-
+                        database.execSQL("insert into SONG_LIST values(null,?,?)", new Object[]{song_name, song_url});
+                        song_list.add(song_name);
+                        url_list.add(song_url);
+                        //Log.e("Add",song_name);
+                        song_list_view_adapter.notifyDataSetChanged();
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -79,10 +90,8 @@ public class MainActivity extends ActionBarActivity {
         dialog_add_song.setCanceledOnTouchOutside(false);
 
 
-
-
         add_button.setOnClickListener(new Button.OnClickListener() {
-            public void onClick(View v){
+            public void onClick(View v) {
                 dialog_add_song.show();
             }
         });
@@ -90,10 +99,10 @@ public class MainActivity extends ActionBarActivity {
         list_button.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ListView v = (ListView)(findViewById(R.id.list_view_song));
-                if(v.getVisibility() == View.GONE){
+                ListView v = (ListView) (findViewById(R.id.list_view_song));
+                if (v.getVisibility() == View.GONE) {
                     v.setVisibility(View.VISIBLE);
-                }else {
+                } else {
                     v.setVisibility(View.GONE);
                 }
             }
@@ -102,15 +111,15 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
-    public void getSongList(){
-        database = openOrCreateDatabase("song.db", Context.MODE_PRIVATE,null);
+    public void getSongList() {
+        database = openOrCreateDatabase("song.db", Context.MODE_PRIVATE, null);
         try {
             database.execSQL("create table SONG_LIST(_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, url TEXT)");
-        }catch(Exception e){
+        } catch (Exception e) {
             // table already exists
         }
-            Cursor c = database.rawQuery("select * from SONG_LIST",null);
-        while(c.moveToNext()) {
+        Cursor c = database.rawQuery("select * from SONG_LIST", null);
+        while (c.moveToNext()) {
             int title_index = c.getColumnIndex("title");
             String title = c.getString(title_index);
             song_list.add(title);
@@ -120,10 +129,24 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    public void setUpListView(){
-        final ListView list_view_song = (ListView)(findViewById(R.id.list_view_song));
-        list_view_song.setAdapter(new ArrayAdapter<String>(this, R.layout.list_view_song, song_list));
+    public void setUpListView() {
+        final ListView list_view_song = (ListView) (findViewById(R.id.list_view_song));
+        song_list_view_adapter = new ArrayAdapter<String>(this, R.layout.list_view_song, song_list);
+        list_view_song.setAdapter(song_list_view_adapter);
+
+        list_view_song.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Intent intent = new Intent(getBaseContext(), PlayMusic.class);
+                intent.putExtra("url",url_list.get(i));
+                intent.putExtra("title",song_list.get(i));
+                startService(intent);
+            }
+        });
     }
+
+
 
 
     @Override
