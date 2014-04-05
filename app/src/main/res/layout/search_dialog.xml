@@ -8,12 +8,12 @@
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:gravity="center"
-        android:text="Add song"
+        android:text="Search"
         android:textSize="40dp"
         android:contentDescription="@string/app_name" />
 
     <EditText
-        android:id="@+id/input_song_name"
+        android:id="@+id/input_search_song_title"
         android:inputType="text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -21,16 +21,6 @@
         android:layout_marginLeft="4dp"
         android:layout_marginRight="4dp"
         android:layout_marginBottom="4dp"
-        android:hint="Title" />
-    <EditText
-        android:id="@+id/input_song_url"
-        android:inputType="text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
-        android:layout_marginBottom="16dp"
-        android:fontFamily="sans-serif"
-        android:hint="URL"/>
+        android:hint="Song name" />
+
 </LinearLayout>

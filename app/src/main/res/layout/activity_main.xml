@@ -2,20 +2,29 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical"
+    android:id="@+id/linear_layout_main"
     android:background="@drawable/background">
 
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
         android:background="@drawable/top_bg">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/text_view_song_title"
-            android:textColor="#000000"/>
-
+            android:textColor="#FFFFFF"
+            android:textSize="30dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/text_view_status"
+            android:textColor="#FFFFFF"
+            android:textSize="15dp"/>
 
         </LinearLayout>
 
@@ -29,7 +38,9 @@
             android:layout_height="wrap_content"
             android:id="@+id/list_view_song"
             android:background="@drawable/top_bg"
-            android:visibility="visible">
+            android:visibility="visible"
+            android:choiceMode="singleChoice"
+            android:listSelector="#3399CC">
 
             </ListView>
 
@@ -51,6 +62,7 @@
             android:id="@+id/btn_play_list"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:layout_gravity="center"
             android:layout_marginRight="10px"
             android:background="@drawable/list_button" />
@@ -60,6 +72,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:layout_weight="1"
             android:layout_marginRight="10px"
             android:background="@drawable/pre_button" />
 
@@ -69,6 +82,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:layout_weight="1"
             android:layout_marginRight="10px"
             android:background="@drawable/play_button" />
 
@@ -76,17 +90,26 @@
         <Button
             android:id="@+id/btn_next"
             android:layout_width="wrap_content"
+            android:layout_weight="1"
             android:layout_height="wrap_content"
             android:layout_marginRight="10px"
             android:background="@drawable/next_button" />
 
-        q<Button
+        <Button
             android:id="@+id/btn_add"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:layout_marginRight="10px"
             android:background="@drawable/plus"/>
 
+        <Button
+            android:id="@+id/btn_search"
+            android:layout_width="wrap_content"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="10px"
+            android:background="@drawable/search"/>
 
 
 
