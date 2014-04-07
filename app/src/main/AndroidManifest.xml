@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.musicplayer.app" >
     <uses-permission android:name="android.permission.INTERNET"/>
+    <permission android:name="com.example.musicplayer.READ" />
+    <permission android:name="com.example.musicplayer.WRITE" />
+    <uses-permission android:name="com.example.musicplayer.READ" />
+    <uses-permission android:name="com.example.musicplayer.WRITE" />
 
     <application
         android:allowBackup="true"
@@ -10,7 +14,8 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name="com.example.musicplayer.app.MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -26,7 +31,11 @@
         <provider android:name="com.example.musicplayer.app.MyContentProvider"
             android:authorities="com.example.musicplayer.app.content"
             android:exported="true"
-            android:enabled="true" >
+            android:enabled="true"
+            android:grantUriPermissions="true"
+            android:label="BooksProvider"
+            android:readPermission="com.example.musicplayer.READ"
+            android:writePermission="com.example.musicplayer.WRITE">
         </provider>
 
     </application>

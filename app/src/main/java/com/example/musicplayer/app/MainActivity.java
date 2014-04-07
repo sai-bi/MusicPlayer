@@ -3,13 +3,13 @@ package com.example.musicplayer.app;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -28,15 +28,22 @@ import java.util.ArrayList;
 
 
 public class MainActivity extends ActionBarActivity {
+    private static final String AUTHORITY = "com.example.musicplayer.app.content";
+    static private final Uri provider;
+
+    static {
+        provider = Uri.parse("content://" + AUTHORITY);
+    }
+
     private String song_name;
     private String song_url;
     private ArrayList<String> song_list;
     private ArrayList<String> url_list;
-    private SQLiteDatabase database;
     private ArrayAdapter<String> song_list_view_adapter;
     private int current_index;
     private Boolean is_playing;
     private ArrayList<Integer> id_list;
+    private int current_id;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,11 +103,24 @@ public class MainActivity extends ActionBarActivity {
                         } else {
                             return;
                         }
-                        database.execSQL("insert into SONG_LIST values(null,?,?)", new Object[]{song_name, song_url});
-                        song_list.add(song_name);
-                        url_list.add(song_url);
-                        //Log.e("Add",song_name);
-                        song_list_view_adapter.notifyDataSetChanged();
+                        //database.execSQL("insert into SONG_LIST values(null,?,?)", new Object[]{song_name, song_url});
+                        try {
+                            ContentValues values = new ContentValues();
+                            values.put("title", song_name);
+                            values.put("url", song_url);
+                            getContentResolver().insert(provider, values);
+                            Cursor c = getContentResolver().query(provider, null, null, null, null);
+                            c.moveToNext();
+                            int index = c.getColumnIndex("_id");
+                            id_list.add(c.getInt(index));
+                            song_list.add(song_name);
+                            url_list.add(song_url);
+                            //Log.e("Add",song_name);
+                            song_list_view_adapter.notifyDataSetChanged();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -210,52 +230,10 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void getSongList() {
-        database = openOrCreateDatabase("song.db", Context.MODE_PRIVATE, null);
-        try {
-            // add some songs
-            database.execSQL("create table SONG_LIST(_id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, url TEXT)");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        SharedPreferences sp = getSharedPreferences("data",MODE_PRIVATE);
-        SharedPreferences.Editor editor = sp.edit();
-        int count = sp.getInt("count",1);
-        if(count == 1){
-            String name = "让她降落";
-            String url = "http://i.cs.hku.hk/fyp/2013/fyp13027/music/rang_ta_jiang_luo.mp3";
-            database.execSQL("insert into SONG_LIST values(null,?,?)", new Object[]{name, url});
-
-            name = "优美地低于生活";
-            url = "http://i.cs.hku.hk/fyp/2013/fyp13027/music/you_mei_de.mp3";
-            database.execSQL("insert into SONG_LIST values(null,?,?)", new Object[]{name, url});
-
-            name = "You are not alone";
-            url = "http://i.cs.hku.hk/fyp/2013/fyp13027/music/you_are_not_alone.mp3";
-            database.execSQL("insert into SONG_LIST values(null,?,?)", new Object[]{name, url});
-
-            name = "We are the world";
-            url = "http://i.cs.hku.hk/fyp/2013/fyp13027/music/we_are_the_world.mp3";
-            database.execSQL("insert into SONG_LIST values(null,?,?)", new Object[]{name, url});
-
-            name = "Heal the world";
-            url = "http://i.cs.hku.hk/fyp/2013/fyp13027/music/heal_the_world.mp3";
-            database.execSQL("insert into SONG_LIST values(null,?,?)", new Object[]{name, url});
-
-            name = "Earth song";
-            url = "http://i.cs.hku.hk/fyp/2013/fyp13027/music/earth_song.mp3";
-            database.execSQL("insert into SONG_LIST values(null,?,?)", new Object[]{name, url});
-
-            name = "Viva la vida";
-            url = "http://i.cs.hku.hk/fyp/2013/fyp13027/music/viva_la_vida.mp3";
-            database.execSQL("insert into SONG_LIST values(null,?,?)", new Object[]{name, url});
-        }
-        count = count + 1;
-        editor.putInt("count",count);
-        editor.commit();
 
 
-        Cursor c = database.rawQuery("select * from SONG_LIST", null);
+        //Cursor c = database.rawQuery("select * from SONG_LIST", null);
+        Cursor c = getContentResolver().query(provider, null, null, null, null);
         while (c.moveToNext()) {
             int title_index = c.getColumnIndex("title");
             String title = c.getString(title_index);
@@ -298,43 +276,92 @@ public class MainActivity extends ActionBarActivity {
             }
         });
 
+        final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+        final View view_add_song = inflater.inflate(R.layout.update_dialog, null);
+
+        builder.setView(view_add_song)
+                // Add action buttons
+                .setPositiveButton("Update", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        EditText input_song_name = (EditText) (view_add_song.findViewById(R.id.update_song_name));
+                        EditText input_song_url = (EditText) (view_add_song.findViewById(R.id.update_song_url));
+                        if (input_song_name.getText() != null) {
+                            song_name = input_song_name.getText().toString();
+                        } else {
+                            return;
+                        }
+                        if (input_song_url.getText() != null) {
+                            song_url = input_song_url.getText().toString();
+                        } else {
+                            return;
+                        }
+                        //database.execSQL("insert into SONG_LIST values(null,?,?)", new Object[]{song_name, song_url});
+                        ContentValues values = new ContentValues();
+                        values.put("url", song_url);
+                        values.put("title", song_name);
+                        String[] selection_args = {song_name, song_url, id_list.get(current_id).toString()};
+                        //selection_args[0] = Integer.toString(current_id);
+
+                        getContentResolver().update(provider, values, "_id = ?", selection_args);
+
+                        song_list.set(current_id, song_name);
+                        url_list.set(current_id, song_url);
+                        song_list_view_adapter.notifyDataSetChanged();
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.dismiss();
+                    }
+                });
+
         list_view_song.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+
+
+                String[] choice = {"Update", "Delete"};
                 final int index = i;
-                builder.setTitle("Delete");
-                builder.setMessage("Do you want to delete this song?");
-                builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
+                AlertDialog.Builder builder1 = new AlertDialog.Builder(MainActivity.this);
+                current_id = i;
 
-                        if (current_index > index) {
-                            current_index = index - 1;
-                        }
-                        try {
-                            database.execSQL("Delete from SONG_LIST where _id = " + id_list.get(index).toString());
-                            song_list.remove(index);
-                            url_list.remove(index);
-                            id_list.remove(index);
-                            song_list_view_adapter.notifyDataSetChanged();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                builder1.setTitle("Choose")
+                        .setItems(choice, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                if (which == 1) {
+                                    if (current_index > index) {
+                                        current_index = index - 1;
+                                    }
+                                    try {
+                                        //database.execSQL("Delete from SONG_LIST where _id = " + id_list.get(index).toString());
+                                        String selection_clause = "_id = ?";
+                                        String[] selection_args = {""};
+                                        selection_args[0] = id_list.get(index).toString();
+                                        getContentResolver().delete(provider, selection_clause, selection_args);
 
-                    }
-                });
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.dismiss();
-                    }
-                });
-                builder.create().show();
+                                        song_list.remove(index);
+                                        url_list.remove(index);
+                                        id_list.remove(index);
+                                        song_list_view_adapter.notifyDataSetChanged();
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                } else if (which == 0) {
+                                    builder.create().show();
+                                }
+                            }
+                        });
+
+                builder1.create().show();
+
                 return true;
             }
         });
+
+
     }
 
     public void setUpSearch() {
@@ -456,9 +483,5 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    @Override
-    public void onDestroy(){
-        database.close();
-    }
 
 }
